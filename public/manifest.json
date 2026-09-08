@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "TheaBridge",
+  "version": "0.1.0",
+  "description": "Importe conteúdos do GitBook para seus Study Kits do Thea.",
+  "action": {
+    "default_title": "Abrir TheaBridge"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": [
+    "sidePanel",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://www.thea.study/*"
+  ],
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  }
+}
