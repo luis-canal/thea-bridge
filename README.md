@@ -17,4 +17,6 @@ The current implementation provides the Manifest V3 foundation, React side panel
 
 The sitemap phase currently supports GitBook spaces hosted at `https://<workspace>.gitbook.io/<space>`. Custom GitBook domains are not included until a stable rule for identifying their space is defined.
 
-The current phase also allows the user to select individual discovered pages, select all pages, clear the selection, and view the pages grouped by their pathname. Markdown download and Thea import are intentionally not implemented yet.
+The current phase also allows the user to select individual discovered pages, select all pages, clear the selection, and view the pages grouped by their pathname.
+
+Selected pages can now be downloaded as Markdown in memory. The extension requests each page through its `.md` URL, validates the response, and creates a `Blob` named after the final pathname segment, such as `01-introducao-engenharia.md`. Download failures are reported independently per page. Thea import is intentionally not implemented yet.

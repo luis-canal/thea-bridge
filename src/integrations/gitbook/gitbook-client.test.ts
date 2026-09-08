@@ -28,4 +28,34 @@ describe('GitBookClient', () => {
       'SITEMAP_REQUEST_FAILED:404',
     );
   });
+
+  it('fetches and validates a page Markdown response', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response('# Intro\n\nContent', { status: 200 }),
+    );
+    const page = {
+      id: 'page',
+      title: 'Intro',
+      url: 'https://hiago.gitbook.io/space/intro',
+      path: 'intro',
+    };
+
+    await expect(new GitBookClient().fetchMarkdown(page)).resolves.toBe('# Intro\n\nContent');
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://hiago.gitbook.io/space/intro.md?displayAgentInstructions=false&markdownSource=page-action',
+    );
+  });
+
+  it('rejects empty and HTML page responses', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('<!doctype html>', { status: 200 }));
+
+    await expect(
+      new GitBookClient().fetchMarkdown({
+        id: 'page',
+        title: 'Intro',
+        url: 'https://hiago.gitbook.io/space/intro',
+        path: 'intro',
+      }),
+    ).rejects.toThrow('INVALID_MARKDOWN_CONTENT');
+  });
 });

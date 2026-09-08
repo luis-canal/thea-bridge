@@ -1,5 +1,6 @@
 import { parseStudyKitUrl } from '../domain/study-kit-url';
 import { GitBookClient } from '../integrations/gitbook/gitbook-client';
+import type { GitBookPage } from '../domain/sitemap-types';
 import type { RuntimeMessage, RuntimeResponse } from '../shared/messages';
 
 void chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
@@ -14,6 +15,11 @@ chrome.runtime.onMessage.addListener(
 
     if (message.type === 'DISCOVER_GITBOOK_PAGES') {
       void discoverGitBookPages(message.url).then(sendResponse);
+      return true;
+    }
+
+    if (message.type === 'DOWNLOAD_MARKDOWN_PAGES') {
+      void downloadMarkdownPages(message.pages).then(sendResponse);
       return true;
     }
 
@@ -46,4 +52,23 @@ async function discoverGitBookPages(inputUrl: string): Promise<RuntimeResponse> 
       reason: error instanceof Error ? error.message : 'SITEMAP_REQUEST_FAILED',
     };
   }
+}
+
+async function downloadMarkdownPages(pages: GitBookPage[]) {
+  const results = [];
+
+  for (const page of pages) {
+    try {
+      const content = await gitBookClient.fetchMarkdown(page);
+      results.push({ pageId: page.id, ok: true as const, content });
+    } catch (error) {
+      results.push({
+        pageId: page.id,
+        ok: false as const,
+        reason: error instanceof Error ? error.message : 'MARKDOWN_REQUEST_FAILED',
+      });
+    }
+  }
+
+  return { ok: true as const, results };
 }

@@ -1,4 +1,5 @@
 import { normalizeGitBookUrl, type GitBookSource } from '../../domain/gitbook-url';
+import { buildMarkdownUrl } from '../../domain/markdown-url';
 import { parseSitemapPages } from '../../domain/sitemap-parser';
 import type { GitBookPage } from '../../domain/sitemap-types';
 
@@ -23,4 +24,24 @@ export class GitBookClient {
       pages: parseSitemapPages(xml, source),
     };
   }
+
+  async fetchMarkdown(page: GitBookPage): Promise<string> {
+    const response = await fetch(buildMarkdownUrl(page.url));
+
+    if (!response.ok) {
+      throw new Error(`MARKDOWN_REQUEST_FAILED:${response.status}`);
+    }
+
+    const content = await response.text();
+
+    if (!content.trim() || looksLikeHtml(content)) {
+      throw new Error('INVALID_MARKDOWN_CONTENT');
+    }
+
+    return content;
+  }
+}
+
+function looksLikeHtml(content: string): boolean {
+  return /^\s*<!doctype\s+html|^\s*<html[\s>]/i.test(content);
 }
