@@ -45,6 +45,24 @@ describe('TheaClient', () => {
     );
   });
 
+  it('does not attach a file that is still processing', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ id: 'file-123', processed: false }), { status: 200 }),
+    );
+
+    await expect(new TheaClient().importFile(file, '1250721117')).rejects.toThrow('FILE_NOT_PROCESSED');
+  });
+
+  it('rejects an explicit material association error', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: 'file-123', processed: true }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ error: 'invalid set' }), { status: 200 }));
+
+    await expect(new TheaClient().importFile(file, '1250721117')).rejects.toThrow(
+      'MATERIAL_ATTACH_REJECTED',
+    );
+  });
+
   it('reports an attachment failure separately from upload', async () => {
     vi.spyOn(globalThis, 'fetch')
       .mockResolvedValueOnce(new Response(JSON.stringify({ id: 'file-123' }), { status: 200 }))

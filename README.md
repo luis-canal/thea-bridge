@@ -22,3 +22,7 @@ The current phase also allows the user to select individual discovered pages, se
 Selected pages can now be downloaded as Markdown in memory. The extension requests each page through its `.md` URL, validates the response, and creates a `Blob` named after the final pathname segment, such as `01-introducao-engenharia.md`. Download failures are reported independently per page.
 
 The current phase also supports importing one selected page into the active Study Kit. The extension sends the Markdown through `POST /files` as `multipart/form-data`, validates the returned `fileId`, and associates it through `POST /sets/{setId}/materials`. The requests use the existing authenticated browser session and do not store credentials. Batch import remains outside this phase.
+
+After a successful association, the active Study Kit tab is reloaded so its attachment list reflects the new material immediately.
+
+The Thea requests also forward the CSRF token from the active Thea session when the corresponding cookie is available, preventing `419` CSRF/session errors.

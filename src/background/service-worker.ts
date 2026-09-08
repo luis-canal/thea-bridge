@@ -86,6 +86,7 @@ async function importMarkdownPage(setId: string, page: GitBookPage) {
     const content = await gitBookClient.fetchMarkdown(page);
     const file = createMarkdownFile(page, content);
     const result = await theaClient.importFile(file, setId);
+    await refreshActiveStudyKit(setId);
     return { ok: true as const, fileId: result.fileId };
   } catch (error) {
     return {
@@ -93,4 +94,20 @@ async function importMarkdownPage(setId: string, page: GitBookPage) {
       reason: error instanceof Error ? error.message : 'THEA_IMPORT_FAILED',
     };
   }
+}
+
+async function refreshActiveStudyKit(setId: string): Promise<void> {
+  const [activeTab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+
+  if (!activeTab?.id || !activeTab.url) {
+    return;
+  }
+
+  const context = parseStudyKitUrl(activeTab.url);
+
+  if (context?.setId !== setId) {
+    return;
+  }
+
+  await chrome.tabs.reload(activeTab.id);
 }

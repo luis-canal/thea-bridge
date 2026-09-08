@@ -12,7 +12,8 @@
   },
   "permissions": [
     "sidePanel",
-    "tabs"
+    "tabs",
+    "cookies"
   ],
   "host_permissions": [
     "https://www.thea.study/*",

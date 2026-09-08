@@ -365,13 +365,29 @@ function getImportErrorMessage(reason: string): string {
     return 'O Thea retornou uma resposta de upload incompatível.';
   }
 
+  if (reason === 'FILE_NOT_PROCESSED') {
+    return 'O Thea ainda está processando o arquivo. Tente importar novamente em alguns segundos.';
+  }
+
+  if (reason === 'FILE_PROCESSING_FAILED') {
+    return 'O Thea não conseguiu processar o arquivo enviado.';
+  }
+
   if (reason.startsWith('FILE_UPLOAD_FAILED:')) {
-    return 'O arquivo não pôde ser enviado ao Thea.';
+    return `O arquivo não pôde ser enviado ao Thea (${getHttpStatus(reason)}).`;
   }
 
   if (reason.startsWith('MATERIAL_ATTACH_FAILED:')) {
-    return 'O arquivo foi enviado, mas não pôde ser associado ao Study Kit.';
+    return `O arquivo foi enviado, mas não pôde ser associado ao Study Kit (${getHttpStatus(reason)}).`;
+  }
+
+  if (reason === 'MATERIAL_ATTACH_REJECTED') {
+    return 'O Thea rejeitou a associação do arquivo ao Study Kit.';
   }
 
   return 'Não foi possível importar a página.';
+}
+
+function getHttpStatus(reason: string): string {
+  return reason.split(':').at(-1) ?? 'status desconhecido';
 }
