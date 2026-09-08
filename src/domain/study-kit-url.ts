@@ -20,7 +20,11 @@ export function parseStudyKitUrl(value: string): StudyKitContext | null {
 
   const segments = url.pathname.split('/').filter(Boolean);
 
-  if (segments.length !== 2 || segments[0] !== 'smartStudy' || !segments[1]) {
+  if (
+    segments.length !== 2 ||
+    !['study', 'smartStudy'].includes(segments[0]) ||
+    !segments[1]
+  ) {
     return null;
   }
 

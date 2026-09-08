@@ -62,3 +62,107 @@ h1 {
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   font-size: 1rem;
 }
+
+.gitbook-section {
+  margin-top: 26px;
+}
+
+.gitbook-form {
+  display: grid;
+  gap: 10px;
+}
+
+input,
+button {
+  width: 100%;
+  border: 1px solid #b8c8ca;
+  border-radius: 6px;
+  font: inherit;
+}
+
+input {
+  padding: 10px 11px;
+  color: #17212b;
+  background: #ffffff;
+}
+
+input:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid #9bc6c1;
+  outline-offset: 2px;
+}
+
+button {
+  padding: 10px 12px;
+  border-color: #48706d;
+  color: #ffffff;
+  background: #48706d;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.feedback {
+  color: #52616b;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.feedback.error {
+  color: #a63b32;
+}
+
+.pages {
+  margin-top: 24px;
+}
+
+.pages-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pages-heading span {
+  color: #52616b;
+  font-size: 0.8rem;
+}
+
+.pages ul {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pages li {
+  border-bottom: 1px solid #d7e0e2;
+}
+
+.pages a {
+  display: grid;
+  gap: 4px;
+  padding: 10px 2px;
+  color: #17212b;
+  text-decoration: none;
+}
+
+.pages a:hover strong {
+  color: #48706d;
+}
+
+.pages strong {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.pages a span {
+  overflow-wrap: anywhere;
+  color: #6a7a81;
+  font-size: 0.76rem;
+}

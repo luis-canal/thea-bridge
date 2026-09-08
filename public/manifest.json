@@ -15,7 +15,8 @@
     "tabs"
   ],
   "host_permissions": [
-    "https://www.thea.study/*"
+    "https://www.thea.study/*",
+    "https://*.gitbook.io/*"
   ],
   "side_panel": {
     "default_path": "sidepanel.html"

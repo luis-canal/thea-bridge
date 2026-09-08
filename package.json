@@ -15,7 +15,8 @@
     "vite": "latest",
     "vitest": "latest",
     "react": "latest",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "fast-xml-parser": "latest"
   },
   "devDependencies": {
     "@types/chrome": "latest",

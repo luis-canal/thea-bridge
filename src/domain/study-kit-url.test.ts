@@ -2,6 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { parseStudyKitUrl } from './study-kit-url';
 
 describe('parseStudyKitUrl', () => {
+  it('extracts the set id from the current Study Kit URL format', () => {
+    expect(parseStudyKitUrl('https://www.thea.study/study/1088200397?st=1f0a07ff5')).toEqual({
+      setId: '1088200397',
+      url: 'https://www.thea.study/study/1088200397?st=1f0a07ff5',
+    });
+  });
+
   it('extracts the set id from a Study Kit URL', () => {
     expect(parseStudyKitUrl('https://www.thea.study/smartStudy/1250721117')).toEqual({
       setId: '1250721117',
