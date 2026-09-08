@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import type {
   GitBookResponse,
+  ImportMarkdownResponse,
   MarkdownDownloadResponse,
   StudyKitResponse,
 } from '../shared/messages';
 import { buildPageTree, type PageTreeNode } from '../domain/page-tree';
-import { createMarkdownFile, type MarkdownFile } from '../domain/markdown-file';
+import { createMarkdownFile, getMarkdownFileName, type MarkdownFile } from '../domain/markdown-file';
 import type { GitBookPage } from '../domain/sitemap-types';
 import './app.css';
 
@@ -23,6 +24,8 @@ export function App() {
   const [downloadErrors, setDownloadErrors] = useState<Map<string, string>>(new Map());
   const [isDiscovering, setIsDiscovering] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ pageId: string; message: string; error: boolean } | null>(null);
   const [discoveryError, setDiscoveryError] = useState<string | null>(null);
   const pageTree = useMemo(() => buildPageTree(pages), [pages]);
 
@@ -56,6 +59,7 @@ export function App() {
     setSelectedPageIds(new Set());
     setDownloadedFiles(new Map());
     setDownloadErrors(new Map());
+    setImportResult(null);
 
     chrome.runtime.sendMessage(
       { type: 'DISCOVER_GITBOOK_PAGES', url: gitBookUrl },
@@ -151,6 +155,40 @@ export function App() {
     );
   }
 
+  function importSelectedPage() {
+    if (viewState.status !== 'ready' || selectedPageIds.size !== 1) {
+      return;
+    }
+
+    const page = pages.find((candidate) => selectedPageIds.has(candidate.id));
+
+    if (!page) {
+      return;
+    }
+
+    setIsImporting(true);
+    setImportResult(null);
+
+    chrome.runtime.sendMessage(
+      { type: 'IMPORT_MARKDOWN_PAGE', setId: viewState.setId, page },
+      (response: ImportMarkdownResponse) => {
+        setIsImporting(false);
+
+        if (chrome.runtime.lastError) {
+          setImportResult({ pageId: page.id, message: 'Não foi possível importar a página.', error: true });
+          return;
+        }
+
+        if (!response?.ok) {
+          setImportResult({ pageId: page.id, message: getImportErrorMessage(response?.reason), error: true });
+          return;
+        }
+
+        setImportResult({ pageId: page.id, message: `${getMarkdownFileName(page)} anexado ao Study Kit.`, error: false });
+      },
+    );
+  }
+
   return (
     <main className="panel">
       <header className="header">
@@ -214,6 +252,19 @@ export function App() {
             >
               {isDownloading ? 'Baixando Markdown...' : 'Baixar selecionadas'}
             </button>
+            <button
+              type="button"
+              className="import-button"
+              disabled={selectedPageIds.size !== 1 || isImporting || viewState.status !== 'ready'}
+              onClick={importSelectedPage}
+            >
+              {isImporting ? 'Importando página...' : 'Importar selecionada'}
+            </button>
+            {importResult && (
+              <p className={`import-result ${importResult.error ? 'download-error' : 'download-success'}`} role="status">
+                {importResult.message}
+              </p>
+            )}
             <PageTree
               nodes={pageTree}
               selectedPageIds={selectedPageIds}
@@ -303,4 +354,24 @@ function getDownloadErrorMessage(reason: string): string {
   }
 
   return 'Falha ao baixar esta página.';
+}
+
+function getImportErrorMessage(reason: string): string {
+  if (reason === 'THEA_SESSION_EXPIRED') {
+    return 'A sessão do Thea expirou. Abra o Thea e entre novamente.';
+  }
+
+  if (reason === 'INCOMPATIBLE_FILE_RESPONSE') {
+    return 'O Thea retornou uma resposta de upload incompatível.';
+  }
+
+  if (reason.startsWith('FILE_UPLOAD_FAILED:')) {
+    return 'O arquivo não pôde ser enviado ao Thea.';
+  }
+
+  if (reason.startsWith('MATERIAL_ATTACH_FAILED:')) {
+    return 'O arquivo foi enviado, mas não pôde ser associado ao Study Kit.';
+  }
+
+  return 'Não foi possível importar a página.';
 }

@@ -1,10 +1,13 @@
 import { parseStudyKitUrl } from '../domain/study-kit-url';
+import { createMarkdownFile } from '../domain/markdown-file';
 import { GitBookClient } from '../integrations/gitbook/gitbook-client';
+import { TheaClient } from '../integrations/thea/thea-client';
 import type { GitBookPage } from '../domain/sitemap-types';
 import type { RuntimeMessage, RuntimeResponse } from '../shared/messages';
 
 void chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 const gitBookClient = new GitBookClient();
+const theaClient = new TheaClient();
 
 chrome.runtime.onMessage.addListener(
   (message: RuntimeMessage, _sender, sendResponse: (response: RuntimeResponse) => void) => {
@@ -20,6 +23,11 @@ chrome.runtime.onMessage.addListener(
 
     if (message.type === 'DOWNLOAD_MARKDOWN_PAGES') {
       void downloadMarkdownPages(message.pages).then(sendResponse);
+      return true;
+    }
+
+    if (message.type === 'IMPORT_MARKDOWN_PAGE') {
+      void importMarkdownPage(message.setId, message.page).then(sendResponse);
       return true;
     }
 
@@ -71,4 +79,18 @@ async function downloadMarkdownPages(pages: GitBookPage[]) {
   }
 
   return { ok: true as const, results };
+}
+
+async function importMarkdownPage(setId: string, page: GitBookPage) {
+  try {
+    const content = await gitBookClient.fetchMarkdown(page);
+    const file = createMarkdownFile(page, content);
+    const result = await theaClient.importFile(file, setId);
+    return { ok: true as const, fileId: result.fileId };
+  } catch (error) {
+    return {
+      ok: false as const,
+      reason: error instanceof Error ? error.message : 'THEA_IMPORT_FAILED',
+    };
+  }
 }
