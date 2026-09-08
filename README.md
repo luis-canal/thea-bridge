@@ -16,3 +16,5 @@ After building, load the `dist` directory in Chrome at `chrome://extensions` wit
 The current implementation provides the Manifest V3 foundation, React side panel, active Thea Study Kit detection, and GitBook page discovery through `sitemap-pages.xml`. Page selection and file import are intentionally not implemented yet.
 
 The sitemap phase currently supports GitBook spaces hosted at `https://<workspace>.gitbook.io/<space>`. Custom GitBook domains are not included until a stable rule for identifying their space is defined.
+
+The current phase also allows the user to select individual discovered pages, select all pages, clear the selection, and view the pages grouped by their pathname. Markdown download and Thea import are intentionally not implemented yet.

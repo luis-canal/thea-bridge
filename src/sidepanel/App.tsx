@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { GitBookResponse, StudyKitResponse } from '../shared/messages';
+import { buildPageTree, type PageTreeNode } from '../domain/page-tree';
 import type { GitBookPage } from '../domain/sitemap-types';
 import './app.css';
 
@@ -12,8 +13,10 @@ export function App() {
   const [viewState, setViewState] = useState<ViewState>({ status: 'loading' });
   const [gitBookUrl, setGitBookUrl] = useState('');
   const [pages, setPages] = useState<GitBookPage[]>([]);
+  const [selectedPageIds, setSelectedPageIds] = useState<Set<string>>(new Set());
   const [isDiscovering, setIsDiscovering] = useState(false);
   const [discoveryError, setDiscoveryError] = useState<string | null>(null);
+  const pageTree = useMemo(() => buildPageTree(pages), [pages]);
 
   useEffect(() => {
     chrome.runtime.sendMessage({ type: 'GET_ACTIVE_STUDY_KIT' }, (response: StudyKitResponse) => {
@@ -42,6 +45,7 @@ export function App() {
     setIsDiscovering(true);
     setDiscoveryError(null);
     setPages([]);
+    setSelectedPageIds(new Set());
 
     chrome.runtime.sendMessage(
       { type: 'DISCOVER_GITBOOK_PAGES', url: gitBookUrl },
@@ -61,6 +65,28 @@ export function App() {
         setPages(response.pages);
       },
     );
+  }
+
+  function togglePage(pageId: string) {
+    setSelectedPageIds((current) => {
+      const next = new Set(current);
+
+      if (next.has(pageId)) {
+        next.delete(pageId);
+      } else {
+        next.add(pageId);
+      }
+
+      return next;
+    });
+  }
+
+  function selectAllPages() {
+    setSelectedPageIds(new Set(pages.map((page) => page.id)));
+  }
+
+  function clearSelection() {
+    setSelectedPageIds(new Set());
   }
 
   return (
@@ -104,19 +130,25 @@ export function App() {
         {pages.length > 0 && (
           <div className="pages" aria-live="polite">
             <div className="pages-heading">
-              <p className="label">Páginas encontradas</p>
+              <div>
+                <p className="label">Páginas encontradas</p>
+                <p className="selection-count">{selectedPageIds.size} selecionada(s)</p>
+              </div>
               <span>{pages.length}</span>
             </div>
-            <ul>
-              {pages.map((page) => (
-                <li key={page.id}>
-                  <a href={page.url} target="_blank" rel="noreferrer">
-                    <strong>{page.title}</strong>
-                    <span>{page.path}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
+            <div className="selection-actions">
+              <button type="button" onClick={selectAllPages}>
+                Selecionar todas
+              </button>
+              <button type="button" className="secondary-button" onClick={clearSelection}>
+                Limpar seleção
+              </button>
+            </div>
+            <PageTree
+              nodes={pageTree}
+              selectedPageIds={selectedPageIds}
+              onTogglePage={togglePage}
+            />
           </div>
         )}
 
@@ -125,6 +157,45 @@ export function App() {
         )}
       </section>
     </main>
+  );
+}
+
+type PageTreeProps = {
+  nodes: PageTreeNode[];
+  selectedPageIds: Set<string>;
+  onTogglePage: (pageId: string) => void;
+};
+
+function PageTree({ nodes, selectedPageIds, onTogglePage }: PageTreeProps) {
+  return (
+    <ul className="page-tree">
+      {nodes.map((node) => (
+        <li key={node.path}>
+          {node.page ? (
+            <label className="page-row">
+              <input
+                type="checkbox"
+                checked={selectedPageIds.has(node.page.id)}
+                onChange={() => onTogglePage(node.page!.id)}
+              />
+              <span className="page-details">
+                <strong>{node.page.title}</strong>
+                <span>{node.page.path}</span>
+              </span>
+            </label>
+          ) : (
+            <p className="tree-folder">{node.name}</p>
+          )}
+          {node.children.length > 0 && (
+            <PageTree
+              nodes={node.children}
+              selectedPageIds={selectedPageIds}
+              onTogglePage={onTogglePage}
+            />
+          )}
+        </li>
+      ))}
+    </ul>
   );
 }
 

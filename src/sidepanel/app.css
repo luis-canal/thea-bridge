@@ -132,37 +132,79 @@ button:disabled {
   font-size: 0.8rem;
 }
 
-.pages ul {
-  display: grid;
+.selection-count {
+  margin: 5px 0 0;
+  color: #52616b;
+  font-size: 0.8rem;
+}
+
+.selection-actions {
+  display: flex;
   gap: 8px;
+  margin-top: 14px;
+}
+
+.selection-actions button {
+  padding: 8px 9px;
+  font-size: 0.76rem;
+}
+
+.secondary-button {
+  border-color: #b8c8ca;
+  color: #52616b;
+  background: #ffffff;
+}
+
+.page-tree,
+.page-tree .page-tree {
   margin: 12px 0 0;
   padding: 0;
   list-style: none;
 }
 
-.pages li {
+.page-tree .page-tree {
+  margin: 2px 0 0 16px;
+}
+
+.page-tree > li {
   border-bottom: 1px solid #d7e0e2;
 }
 
-.pages a {
+.page-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 10px 2px;
+  cursor: pointer;
+}
+
+.page-row input {
+  flex: 0 0 auto;
+  width: auto;
+  margin: 3px 0 0;
+}
+
+.page-details {
   display: grid;
   gap: 4px;
-  padding: 10px 2px;
-  color: #17212b;
-  text-decoration: none;
+  min-width: 0;
 }
 
-.pages a:hover strong {
-  color: #48706d;
-}
-
-.pages strong {
+.page-details strong {
   font-size: 0.9rem;
   font-weight: 700;
 }
 
-.pages a span {
+.page-details span {
   overflow-wrap: anywhere;
   color: #6a7a81;
   font-size: 0.76rem;
+}
+
+.tree-folder {
+  margin: 0;
+  padding: 10px 2px 4px;
+  color: #48706d;
+  font-size: 0.8rem;
+  font-weight: 700;
 }
