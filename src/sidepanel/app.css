@@ -177,10 +177,81 @@ button:disabled {
   background: #e8eeee;
 }
 
-.import-result {
-  margin: 10px 0 0;
+.cancel-button {
+  margin-top: 8px;
+  border-color: #a63b32;
+  color: #a63b32;
+  background: #ffffff;
+}
+
+.import-progress {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #d7e0e2;
+}
+
+.progress-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.progress-heading span {
+  color: #52616b;
   font-size: 0.8rem;
-  line-height: 1.35;
+}
+
+.import-progress ul {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.import-progress li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid #d7e0e2;
+}
+
+.import-progress li > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.import-progress strong {
+  overflow-wrap: anywhere;
+  font-size: 0.82rem;
+}
+
+.import-progress span,
+.import-progress small {
+  color: #6a7a81;
+  font-size: 0.74rem;
+}
+
+.import-progress small {
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.progress-failed span {
+  color: #a63b32;
+}
+
+.retry-button {
+  flex: 0 0 auto;
+  width: auto;
+  padding: 6px 8px;
+  border-color: #b8c8ca;
+  color: #52616b;
+  background: #ffffff;
+  font-size: 0.72rem;
 }
 
 .download-results {

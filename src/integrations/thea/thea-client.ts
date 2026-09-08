@@ -17,7 +17,7 @@ export class TheaClient {
     return { fileId };
   }
 
-  private async uploadFile(file: MarkdownFile): Promise<string> {
+  async uploadFile(file: MarkdownFile): Promise<string> {
     const formData = new FormData();
     formData.append('file', file.blob, file.fileName);
     formData.append('name', file.fileName);
@@ -48,7 +48,7 @@ export class TheaClient {
     return payload.id;
   }
 
-  private async attachFileToSet(fileId: string, setId: string): Promise<void> {
+  async attachFileToSet(fileId: string, setId: string): Promise<void> {
     const response = await fetch(`${THEA_SETS_URL}/${encodeURIComponent(setId)}/materials`, {
       method: 'POST',
       body: JSON.stringify({ fileIds: [fileId], setIds: [] }),

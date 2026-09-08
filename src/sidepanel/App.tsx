@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import type {
   GitBookResponse,
-  ImportMarkdownResponse,
+  ImportJobResponse,
+  ImportProgressMessage,
   MarkdownDownloadResponse,
   StudyKitResponse,
 } from '../shared/messages';
+import type { ImportJobState, ImportPageState } from '../domain/import-job';
 import { buildPageTree, type PageTreeNode } from '../domain/page-tree';
-import { createMarkdownFile, getMarkdownFileName, type MarkdownFile } from '../domain/markdown-file';
+import { createMarkdownFile, type MarkdownFile } from '../domain/markdown-file';
 import type { GitBookPage } from '../domain/sitemap-types';
 import './app.css';
 
@@ -24,8 +26,7 @@ export function App() {
   const [downloadErrors, setDownloadErrors] = useState<Map<string, string>>(new Map());
   const [isDiscovering, setIsDiscovering] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [isImporting, setIsImporting] = useState(false);
-  const [importResult, setImportResult] = useState<{ pageId: string; message: string; error: boolean } | null>(null);
+  const [importJob, setImportJob] = useState<ImportJobState | null>(null);
   const [discoveryError, setDiscoveryError] = useState<string | null>(null);
   const pageTree = useMemo(() => buildPageTree(pages), [pages]);
 
@@ -59,7 +60,7 @@ export function App() {
     setSelectedPageIds(new Set());
     setDownloadedFiles(new Map());
     setDownloadErrors(new Map());
-    setImportResult(null);
+    setImportJob(null);
 
     chrome.runtime.sendMessage(
       { type: 'DISCOVER_GITBOOK_PAGES', url: gitBookUrl },
@@ -155,39 +156,66 @@ export function App() {
     );
   }
 
-  function importSelectedPage() {
-    if (viewState.status !== 'ready' || selectedPageIds.size !== 1) {
+  function startImport() {
+    if (viewState.status !== 'ready' || selectedPageIds.size === 0) {
       return;
     }
 
-    const page = pages.find((candidate) => selectedPageIds.has(candidate.id));
+    const selectedPages = pages.filter((page) => selectedPageIds.has(page.id));
+    const jobId = crypto.randomUUID();
 
-    if (!page) {
-      return;
-    }
-
-    setIsImporting(true);
-    setImportResult(null);
+    setImportJob(null);
 
     chrome.runtime.sendMessage(
-      { type: 'IMPORT_MARKDOWN_PAGE', setId: viewState.setId, page },
-      (response: ImportMarkdownResponse) => {
-        setIsImporting(false);
-
+      { type: 'START_IMPORT', jobId, setId: viewState.setId, pages: selectedPages },
+      (response: ImportJobResponse) => {
         if (chrome.runtime.lastError) {
-          setImportResult({ pageId: page.id, message: 'Não foi possível importar a página.', error: true });
+          setImportJob(null);
           return;
         }
 
         if (!response?.ok) {
-          setImportResult({ pageId: page.id, message: getImportErrorMessage(response?.reason), error: true });
           return;
         }
 
-        setImportResult({ pageId: page.id, message: `${getMarkdownFileName(page)} anexado ao Study Kit.`, error: false });
+        setImportJob(response.state);
       },
     );
   }
+
+  function cancelImport() {
+    if (!importJob || importJob.status !== 'running') {
+      return;
+    }
+
+    chrome.runtime.sendMessage({ type: 'CANCEL_IMPORT', jobId: importJob.jobId });
+  }
+
+  function retryPage(pageId: string) {
+    if (!importJob || importJob.status === 'running') {
+      return;
+    }
+
+    chrome.runtime.sendMessage(
+      { type: 'RETRY_IMPORT_PAGE', jobId: importJob.jobId, pageId },
+      (response: ImportJobResponse) => {
+        if (!chrome.runtime.lastError && response?.ok) {
+          setImportJob(response.state);
+        }
+      },
+    );
+  }
+
+  useEffect(() => {
+    const handleImportProgress = (message: ImportProgressMessage) => {
+      if (message.type === 'IMPORT_PROGRESS' && importJob?.jobId === message.state.jobId) {
+        setImportJob(message.state);
+      }
+    };
+
+    chrome.runtime.onMessage.addListener(handleImportProgress);
+    return () => chrome.runtime.onMessage.removeListener(handleImportProgress);
+  }, [importJob?.jobId]);
 
   return (
     <main className="panel">
@@ -255,16 +283,17 @@ export function App() {
             <button
               type="button"
               className="import-button"
-              disabled={selectedPageIds.size !== 1 || isImporting || viewState.status !== 'ready'}
-              onClick={importSelectedPage}
+              disabled={selectedPageIds.size === 0 || importJob?.status === 'running' || viewState.status !== 'ready'}
+              onClick={startImport}
             >
-              {isImporting ? 'Importando página...' : 'Importar selecionada'}
+              {importJob?.status === 'running' ? 'Importando...' : 'Importar selecionadas'}
             </button>
-            {importResult && (
-              <p className={`import-result ${importResult.error ? 'download-error' : 'download-success'}`} role="status">
-                {importResult.message}
-              </p>
+            {importJob?.status === 'running' && (
+              <button type="button" className="cancel-button" onClick={cancelImport}>
+                Cancelar importação
+              </button>
             )}
+            {importJob && <ImportProgress state={importJob} onRetry={retryPage} />}
             <PageTree
               nodes={pageTree}
               selectedPageIds={selectedPageIds}
@@ -330,6 +359,51 @@ function PageTree({ nodes, selectedPageIds, onTogglePage }: PageTreeProps) {
       ))}
     </ul>
   );
+}
+
+function ImportProgress({ state, onRetry }: { state: ImportJobState; onRetry: (pageId: string) => void }) {
+  const completed = state.pages.filter(({ status }) => status === 'imported').length;
+
+  return (
+    <div className="import-progress" aria-live="polite">
+      <div className="progress-heading">
+        <p className="label">Progresso da importação</p>
+        <span>{completed}/{state.pages.length}</span>
+      </div>
+      <ul>
+        {state.pages.map((pageState) => (
+          <ImportProgressRow key={pageState.page.id} pageState={pageState} onRetry={onRetry} />
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function ImportProgressRow({ pageState, onRetry }: { pageState: ImportPageState; onRetry: (pageId: string) => void }) {
+  const status = getImportStatusLabel(pageState);
+
+  return (
+    <li className={pageState.status === 'failed' ? 'progress-failed' : undefined}>
+      <div>
+        <strong>{pageState.page.title}</strong>
+        <span>{status}</span>
+        {pageState.fileId && <small>fileId: {pageState.fileId}</small>}
+      </div>
+      {pageState.status === 'failed' && (
+        <button type="button" className="retry-button" onClick={() => onRetry(pageState.page.id)}>
+          Tentar novamente
+        </button>
+      )}
+    </li>
+  );
+}
+
+function getImportStatusLabel(pageState: ImportPageState): string {
+  if (pageState.status === 'pending') return 'Aguardando';
+  if (pageState.status === 'processing') return `Processando: ${pageState.stage}`;
+  if (pageState.status === 'imported') return 'Importada';
+  if (pageState.status === 'cancelled') return 'Cancelada';
+  return `Falhou: ${getImportErrorMessage(pageState.error ?? 'IMPORT_FAILED')}`;
 }
 
 function getDiscoveryErrorMessage(reason?: string): string {

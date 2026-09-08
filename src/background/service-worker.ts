@@ -2,12 +2,14 @@ import { parseStudyKitUrl } from '../domain/study-kit-url';
 import { createMarkdownFile } from '../domain/markdown-file';
 import { GitBookClient } from '../integrations/gitbook/gitbook-client';
 import { TheaClient } from '../integrations/thea/thea-client';
+import { ImportJob, type ImportJobState } from '../domain/import-job';
 import type { GitBookPage } from '../domain/sitemap-types';
 import type { RuntimeMessage, RuntimeResponse } from '../shared/messages';
 
 void chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 const gitBookClient = new GitBookClient();
 const theaClient = new TheaClient();
+const importJobs = new Map<string, ImportJob>();
 
 chrome.runtime.onMessage.addListener(
   (message: RuntimeMessage, _sender, sendResponse: (response: RuntimeResponse) => void) => {
@@ -28,6 +30,20 @@ chrome.runtime.onMessage.addListener(
 
     if (message.type === 'IMPORT_MARKDOWN_PAGE') {
       void importMarkdownPage(message.setId, message.page).then(sendResponse);
+      return true;
+    }
+
+    if (message.type === 'START_IMPORT') {
+      void startImport(message.jobId, message.setId, message.pages).then(sendResponse);
+      return true;
+    }
+
+    if (message.type === 'CANCEL_IMPORT') {
+      return cancelImport(message.jobId, sendResponse);
+    }
+
+    if (message.type === 'RETRY_IMPORT_PAGE') {
+      void retryImportPage(message.jobId, message.pageId).then(sendResponse);
       return true;
     }
 
@@ -93,6 +109,59 @@ async function importMarkdownPage(setId: string, page: GitBookPage) {
       ok: false as const,
       reason: error instanceof Error ? error.message : 'THEA_IMPORT_FAILED',
     };
+  }
+}
+
+async function startImport(jobId: string, setId: string, pages: GitBookPage[]) {
+  if (importJobs.has(jobId)) {
+    return { ok: false as const, reason: 'IMPORT_JOB_ALREADY_EXISTS' };
+  }
+
+  const job = createImportJob(jobId, setId, pages);
+  importJobs.set(jobId, job);
+  const initialState = job.snapshot;
+  void runImportJob(job, setId);
+  return { ok: true as const, state: initialState };
+}
+
+function cancelImport(jobId: string, sendResponse: (response: RuntimeResponse) => void): boolean {
+  const job = importJobs.get(jobId);
+
+  if (!job) {
+    sendResponse({ ok: false, reason: 'IMPORT_JOB_NOT_FOUND' });
+    return false;
+  }
+
+  job.cancel();
+  sendResponse({ ok: true, state: job.snapshot });
+  return false;
+}
+
+async function retryImportPage(jobId: string, pageId: string) {
+  const job = importJobs.get(jobId);
+
+  if (!job) {
+    return { ok: false as const, reason: 'IMPORT_JOB_NOT_FOUND' };
+  }
+
+  return { ok: true as const, state: await job.retry(pageId) };
+}
+
+function createImportJob(jobId: string, setId: string, pages: GitBookPage[]): ImportJob {
+  return new ImportJob(jobId, setId, pages, {
+    gitBookClient,
+    theaClient,
+    onUpdate: (state) => {
+      void chrome.runtime.sendMessage({ type: 'IMPORT_PROGRESS', state });
+    },
+  });
+}
+
+async function runImportJob(job: ImportJob, setId: string): Promise<void> {
+  const state = await job.run();
+
+  if (state.pages.some(({ status }) => status === 'imported')) {
+    await refreshActiveStudyKit(setId);
   }
 }
 
