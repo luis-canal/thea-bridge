@@ -396,13 +396,24 @@ function PageCard({
 
 function ImportProgress({ state, onRetry }: { state: ImportJobState; onRetry: (pageId: string) => void }) {
   const completed = state.pages.filter(({ status }) => status === 'imported').length;
+  const progress = state.pages.length === 0 ? 0 : Math.round((completed / state.pages.length) * 100);
 
   return (
     <div className="import-progress" aria-live="polite">
       <DownloadSummary state={state} />
       <div className="progress-heading">
         <p className="label">Progresso da importação</p>
-        <span>{completed}/{state.pages.length}</span>
+        <span>{completed} de {state.pages.length}</span>
+      </div>
+      <div
+        className="progress-track"
+        role="progressbar"
+        aria-label="Progresso da importação"
+        aria-valuemin={0}
+        aria-valuemax={state.pages.length}
+        aria-valuenow={completed}
+      >
+        <span className="progress-fill" style={{ width: `${progress}%` }} />
       </div>
       <ul>
         {state.pages.map((pageState) => (
@@ -472,10 +483,24 @@ function ImportProgressRow({ pageState, onRetry }: { pageState: ImportPageState;
 
 function getImportStatusLabel(pageState: ImportPageState): string {
   if (pageState.status === 'pending') return 'Aguardando';
-  if (pageState.status === 'processing') return `Processando: ${pageState.stage}`;
+  if (pageState.status === 'processing') return getProcessingStageLabel(pageState.stage);
   if (pageState.status === 'imported') return 'Importada';
   if (pageState.status === 'cancelled') return 'Cancelada';
-  return `Falhou: ${getImportErrorMessage(pageState.error ?? 'IMPORT_FAILED')}`;
+  return getFailedStageLabel(pageState.failedStage);
+}
+
+function getProcessingStageLabel(stage?: ImportPageState['stage']): string {
+  if (stage === 'download') return 'Preparando conteúdo';
+  if (stage === 'upload') return 'Enviando arquivo';
+  if (stage === 'attach') return 'Adicionando ao Study Kit';
+  return 'Processando';
+}
+
+function getFailedStageLabel(stage?: ImportPageState['failedStage']): string {
+  if (stage === 'download') return 'Não foi possível preparar o conteúdo';
+  if (stage === 'upload') return 'Não foi possível enviar o arquivo';
+  if (stage === 'attach') return 'Não foi possível adicionar ao Study Kit';
+  return 'Não foi possível importar';
 }
 
 function getImportButtonLabel(selectedCount: number): string {

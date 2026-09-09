@@ -62,7 +62,11 @@ describe('ImportJob', () => {
 
     const firstRun = await job.run();
 
-    expect(firstRun.pages[0]).toMatchObject({ status: 'failed', stage: 'upload', error: 'FILE_UPLOAD_FAILED:500' });
+    expect(firstRun.pages[0]).toMatchObject({
+      status: 'failed',
+      failedStage: 'upload',
+      error: 'FILE_UPLOAD_FAILED:500',
+    });
     expect(firstRun.pages[0].downloaded).toBe(true);
     expect(firstRun.pages[1].status).toBe('imported');
 
@@ -80,9 +84,23 @@ describe('ImportJob', () => {
 
     expect(result.pages[0]).toMatchObject({
       status: 'failed',
-      stage: 'attach',
+      failedStage: 'attach',
       fileId: 'file-1',
       error: 'MATERIAL_ATTACH_FAILED:500',
+    });
+  });
+
+  it('marks a download failure with the download stage', async () => {
+    const { job } = createJob({
+      fetchMarkdown: vi.fn().mockRejectedValue(new Error('MARKDOWN_REQUEST_FAILED:404')),
+    });
+
+    const result = await job.run();
+
+    expect(result.pages[0]).toMatchObject({
+      status: 'failed',
+      failedStage: 'download',
+      downloaded: false,
     });
   });
 

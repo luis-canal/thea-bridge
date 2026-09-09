@@ -10,6 +10,7 @@ export type ImportPageState = {
   page: GitBookPage;
   status: ImportPageStatus;
   stage?: ImportStage;
+  failedStage?: ImportStage;
   downloaded: boolean;
   fileId?: string;
   error?: string;
@@ -82,6 +83,7 @@ export class ImportJob {
 
     pageState.status = 'pending';
     pageState.stage = undefined;
+    pageState.failedStage = undefined;
     pageState.error = undefined;
     this.state.status = 'running';
     this.cancelled = false;
@@ -122,6 +124,8 @@ export class ImportJob {
       }
 
       pageState.status = 'failed';
+      pageState.failedStage = pageState.stage;
+      pageState.stage = undefined;
       pageState.error = error instanceof Error ? error.message : 'IMPORT_FAILED';
       this.emit();
     }

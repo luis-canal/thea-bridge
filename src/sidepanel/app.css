@@ -335,6 +335,22 @@ button:disabled {
   font-size: 0.8rem;
 }
 
+.progress-track {
+  height: 8px;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #dfe9e8;
+}
+
+.progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #48706d;
+  transition: width 180ms ease;
+}
+
 .import-progress ul {
   display: grid;
   gap: 8px;
