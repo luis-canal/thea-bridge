@@ -399,6 +399,7 @@ function ImportProgress({ state, onRetry }: { state: ImportJobState; onRetry: (p
 
   return (
     <div className="import-progress" aria-live="polite">
+      <DownloadSummary state={state} />
       <div className="progress-heading">
         <p className="label">Progresso da importação</p>
         <span>{completed}/{state.pages.length}</span>
@@ -412,6 +413,45 @@ function ImportProgress({ state, onRetry }: { state: ImportJobState; onRetry: (p
   );
 }
 
+function DownloadSummary({ state }: { state: ImportJobState }) {
+  const prepared = state.pages.filter(({ downloaded }) => downloaded).length;
+  const failed = state.pages.length - prepared;
+
+  if (state.status === 'running') {
+    return (
+      <div className="download-summary download-summary-running">
+        <p className="download-summary-label">PREPARANDO ARQUIVOS</p>
+        <p>{prepared} de {state.pages.length} páginas preparadas</p>
+      </div>
+    );
+  }
+
+  if (prepared === state.pages.length) {
+    return (
+      <div className="download-summary download-summary-success">
+        <p className="download-summary-label">DOWNLOAD CONCLUÍDO</p>
+        <p>✓ {prepared} {prepared === 1 ? 'arquivo preparado' : 'arquivos preparados'}</p>
+      </div>
+    );
+  }
+
+  if (prepared > 0) {
+    return (
+      <div className="download-summary download-summary-partial">
+        <p className="download-summary-label">DOWNLOAD PARCIAL</p>
+        <p>✓ {prepared} preparados · ! {failed} com erro</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="download-summary download-summary-error">
+      <p className="download-summary-label">DOWNLOAD NÃO CONCLUÍDO</p>
+      <p>Nenhum arquivo foi preparado.</p>
+    </div>
+  );
+}
+
 function ImportProgressRow({ pageState, onRetry }: { pageState: ImportPageState; onRetry: (pageId: string) => void }) {
   const status = getImportStatusLabel(pageState);
 
@@ -420,7 +460,6 @@ function ImportProgressRow({ pageState, onRetry }: { pageState: ImportPageState;
       <div>
         <strong>{pageState.page.title}</strong>
         <span>{status}</span>
-        {pageState.fileId && <small>fileId: {pageState.fileId}</small>}
       </div>
       {pageState.status === 'failed' && (
         <button type="button" className="retry-button" onClick={() => onRetry(pageState.page.id)}>

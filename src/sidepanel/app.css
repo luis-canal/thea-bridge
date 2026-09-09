@@ -284,6 +284,46 @@ button:disabled {
   border-top: 1px solid #d7e0e2;
 }
 
+.download-summary {
+  margin-bottom: 16px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.download-summary p {
+  margin: 0;
+  color: #52616b;
+  font-size: 0.8rem;
+}
+
+.download-summary-label {
+  margin-bottom: 5px !important;
+  color: #17212b !important;
+  font-size: 0.7rem !important;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.download-summary-success {
+  border: 1px solid #b9d8d1;
+  background: #edf6f4;
+}
+
+.download-summary-partial {
+  border: 1px solid #e2cf9a;
+  background: #fff8e7;
+}
+
+.download-summary-error {
+  border: 1px solid #e0b7b2;
+  background: #fff1ef;
+}
+
+.download-summary-running {
+  border: 1px solid #d7e0e2;
+}
+
 .progress-heading {
   display: flex;
   align-items: center;

@@ -10,6 +10,7 @@ export type ImportPageState = {
   page: GitBookPage;
   status: ImportPageStatus;
   stage?: ImportStage;
+  downloaded: boolean;
   fileId?: string;
   error?: string;
 };
@@ -41,7 +42,7 @@ export class ImportJob {
       jobId,
       setId,
       status: 'running',
-      pages: pages.map((page) => ({ page, status: 'pending' })),
+      pages: pages.map((page) => ({ page, status: 'pending', downloaded: false })),
     };
   }
 
@@ -95,6 +96,7 @@ export class ImportJob {
 
     try {
       const content = await this.dependencies.gitBookClient.fetchMarkdown(pageState.page);
+      pageState.downloaded = true;
       this.throwIfCancelled(pageState);
 
       pageState.stage = 'upload';

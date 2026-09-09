@@ -53,6 +53,7 @@ describe('ImportJob', () => {
       { status: 'imported', fileId: 'file-1' },
       { status: 'imported', fileId: 'file-2' },
     ]);
+    expect(result.pages.every(({ downloaded }) => downloaded)).toBe(true);
   });
 
   it('keeps a failed page isolated and retries it individually', async () => {
@@ -62,6 +63,7 @@ describe('ImportJob', () => {
     const firstRun = await job.run();
 
     expect(firstRun.pages[0]).toMatchObject({ status: 'failed', stage: 'upload', error: 'FILE_UPLOAD_FAILED:500' });
+    expect(firstRun.pages[0].downloaded).toBe(true);
     expect(firstRun.pages[1].status).toBe('imported');
 
     const retried = await job.retry('one');
