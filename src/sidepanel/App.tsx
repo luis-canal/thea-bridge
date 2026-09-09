@@ -116,6 +116,13 @@ export function App() {
     selectAllPages();
   }
 
+  const selectedCount = selectedPageIds.size;
+  const importedCount = importJob?.pages.filter(({ status }) => status === 'imported').length ?? 0;
+  const importCompleted =
+    importJob?.status === 'completed' && importedCount === importJob.pages.length && importJob.pages.length > 0;
+  const downloadCompleted = !isDownloading && downloadedFiles.size > 0;
+  const downloadPartial = downloadCompleted && downloadErrors.size > 0;
+
   function downloadSelectedPages() {
     const selectedPages = pages.filter((page) => selectedPageIds.has(page.id));
 
@@ -295,19 +302,34 @@ export function App() {
             />
             <button
               type="button"
-              className="download-button"
-              disabled={selectedPageIds.size === 0 || isDownloading}
-              onClick={downloadSelectedPages}
+              className="import-button"
+              disabled={
+                selectedCount === 0 ||
+                importJob?.status === 'running' ||
+                importCompleted ||
+                viewState.status !== 'ready'
+              }
+              onClick={startImport}
             >
-              {isDownloading ? 'Baixando Markdown...' : 'Baixar selecionadas'}
+              {importJob?.status === 'running'
+                ? `Importando ${importedCount} de ${importJob.pages.length}...`
+                : importCompleted
+                  ? 'Importação concluída'
+                  : getImportButtonLabel(selectedCount)}
             </button>
             <button
               type="button"
-              className="import-button"
-              disabled={selectedPageIds.size === 0 || importJob?.status === 'running' || viewState.status !== 'ready'}
-              onClick={startImport}
+              className="download-button"
+              disabled={selectedCount === 0 || isDownloading}
+              onClick={downloadSelectedPages}
             >
-              {importJob?.status === 'running' ? 'Importando...' : 'Importar selecionadas'}
+              {isDownloading
+                ? 'Preparando Markdown...'
+                : downloadPartial
+                  ? 'Download parcial'
+                  : downloadCompleted
+                    ? 'Download concluído'
+                    : 'Baixar Markdown'}
             </button>
             {importJob?.status === 'running' && (
               <button type="button" className="cancel-button" onClick={cancelImport}>
@@ -478,6 +500,14 @@ function getImportStatusLabel(pageState: ImportPageState): string {
   if (pageState.status === 'imported') return 'Importada';
   if (pageState.status === 'cancelled') return 'Cancelada';
   return `Falhou: ${getImportErrorMessage(pageState.error ?? 'IMPORT_FAILED')}`;
+}
+
+function getImportButtonLabel(selectedCount: number): string {
+  if (selectedCount === 0) {
+    return 'Importar selecionadas';
+  }
+
+  return `Importar ${selectedCount} ${selectedCount === 1 ? 'página' : 'páginas'}`;
 }
 
 function getDiscoveryErrorMessage(reason?: string): string {

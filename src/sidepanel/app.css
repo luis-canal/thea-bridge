@@ -210,6 +210,10 @@ button:disabled {
 
 .download-button {
   margin-top: 10px;
+  border-color: #b8c8ca;
+  color: #52616b;
+  background: #ffffff;
+  font-size: 0.82rem;
 }
 
 .download-button:disabled {
@@ -219,15 +223,20 @@ button:disabled {
 }
 
 .import-button {
-  margin-top: 8px;
+  margin-top: 14px;
+  padding: 13px 12px;
   border-color: #17212b;
+  color: #ffffff;
   background: #17212b;
+  box-shadow: 0 4px 10px rgba(23, 33, 43, 0.14);
+  font-size: 0.92rem;
 }
 
 .import-button:disabled {
   border-color: #b8c8ca;
   color: #6a7a81;
   background: #e8eeee;
+  box-shadow: none;
 }
 
 .cancel-button {
