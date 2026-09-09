@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type {
   GitBookResponse,
   ImportJobResponse,
@@ -10,6 +10,7 @@ import type { ImportJobState, ImportPageState } from '../domain/import-job';
 import { buildPageTree, type PageTreeNode } from '../domain/page-tree';
 import { createMarkdownFile, type MarkdownFile } from '../domain/markdown-file';
 import type { GitBookPage } from '../domain/sitemap-types';
+import { getSelectionState } from '../domain/selection-state';
 import './app.css';
 
 type ViewState =
@@ -102,6 +103,17 @@ export function App() {
 
   function clearSelection() {
     setSelectedPageIds(new Set());
+  }
+
+  const selectionState = getSelectionState(pages.length, selectedPageIds.size);
+
+  function toggleAllPages() {
+    if (selectionState === 'all') {
+      clearSelection();
+      return;
+    }
+
+    selectAllPages();
   }
 
   function downloadSelectedPages() {
@@ -276,14 +288,11 @@ export function App() {
                 <strong>{selectedPageIds.size}</strong> selecionadas
               </p>
             </div>
-            <div className="selection-actions">
-              <button type="button" onClick={selectAllPages}>
-                Selecionar todas
-              </button>
-              <button type="button" className="secondary-button" onClick={clearSelection}>
-                Limpar seleção
-              </button>
-            </div>
+            <SelectAllCheckbox
+              state={selectionState}
+              onChange={toggleAllPages}
+              count={pages.length}
+            />
             <button
               type="button"
               className="download-button"
@@ -346,17 +355,11 @@ function PageTree({ nodes, selectedPageIds, onTogglePage }: PageTreeProps) {
       {nodes.map((node) => (
         <li key={node.path}>
           {node.page ? (
-            <label className="page-row">
-              <input
-                type="checkbox"
-                checked={selectedPageIds.has(node.page.id)}
-                onChange={() => onTogglePage(node.page!.id)}
-              />
-              <span className="page-details">
-                <strong>{node.page.title}</strong>
-                <span>{node.page.path}</span>
-              </span>
-            </label>
+            <PageCard
+              page={node.page}
+              selected={selectedPageIds.has(node.page.id)}
+              onToggle={() => onTogglePage(node.page!.id)}
+            />
           ) : (
             <p className="tree-folder">{node.name}</p>
           )}
@@ -370,6 +373,65 @@ function PageTree({ nodes, selectedPageIds, onTogglePage }: PageTreeProps) {
         </li>
       ))}
     </ul>
+  );
+}
+
+function SelectAllCheckbox({
+  state,
+  onChange,
+  count,
+}: {
+  state: 'none' | 'partial' | 'all';
+  onChange: () => void;
+  count: number;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.indeterminate = state === 'partial';
+    }
+  }, [state]);
+
+  return (
+    <label className="select-all">
+      <input
+        ref={inputRef}
+        type="checkbox"
+        checked={state === 'all'}
+        onChange={onChange}
+        aria-label="Selecionar todo o conteúdo"
+      />
+      <span
+        className={`checkbox-mark${state === 'all' ? ' checkbox-mark-checked' : ''}${
+          state === 'partial' ? ' checkbox-mark-partial' : ''
+        }`}
+        aria-hidden="true"
+      />
+      <span>Selecionar todo o conteúdo</span>
+      <small>{count} páginas</small>
+    </label>
+  );
+}
+
+function PageCard({
+  page,
+  selected,
+  onToggle,
+}: {
+  page: GitBookPage;
+  selected: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <label className={`page-card${selected ? ' page-card-selected' : ''}`}>
+      <input type="checkbox" checked={selected} onChange={onToggle} />
+      <span className="checkbox-mark" aria-hidden="true" />
+      <span className="page-details">
+        <strong>{page.title}</strong>
+        <span>{page.path}</span>
+      </span>
+    </label>
   );
 }
 

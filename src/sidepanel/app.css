@@ -186,21 +186,26 @@ button:disabled {
   font-size: 0.88rem;
 }
 
-.selection-actions {
+.select-all {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
   margin-top: 14px;
-}
-
-.selection-actions button {
-  padding: 8px 9px;
-  font-size: 0.76rem;
-}
-
-.secondary-button {
-  border-color: #b8c8ca;
-  color: #52616b;
+  padding: 10px 12px;
+  border: 1px solid #d7e0e2;
+  border-radius: 8px;
+  color: #17212b;
   background: #ffffff;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.select-all small {
+  margin-left: auto;
+  color: #6a7a81;
+  font-size: 0.72rem;
+  font-weight: 400;
 }
 
 .download-button {
@@ -335,22 +340,100 @@ button:disabled {
   margin: 2px 0 0 16px;
 }
 
-.page-tree > li {
-  border-bottom: 1px solid #d7e0e2;
-}
-
-.page-row {
+.page-card {
   display: flex;
   align-items: flex-start;
   gap: 9px;
-  padding: 10px 2px;
+  margin: 8px 0;
+  padding: 12px;
+  border: 1px solid #d7e0e2;
+  border-radius: 8px;
+  background: #ffffff;
   cursor: pointer;
 }
 
-.page-row input {
+.page-card:hover {
+  border-color: #9bc6c1;
+}
+
+.page-card-selected {
+  border-color: #48706d;
+  background: #edf6f4;
+  box-shadow: 0 0 0 1px #48706d;
+}
+
+.page-card input,
+.select-all input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+.checkbox-mark {
+  display: grid;
   flex: 0 0 auto;
-  width: auto;
-  margin: 3px 0 0;
+  place-items: center;
+  width: 19px;
+  height: 19px;
+  margin-top: 1px;
+  border: 1.5px solid #9aabad;
+  border-radius: 5px;
+  background: #ffffff;
+}
+
+.page-card-selected .checkbox-mark {
+  border-color: #48706d;
+  background: #48706d;
+}
+
+.page-card-selected .checkbox-mark::after {
+  width: 8px;
+  height: 5px;
+  border-bottom: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+  content: '';
+  transform: rotate(-45deg) translate(1px, -1px);
+}
+
+.page-card input:focus-visible + .checkbox-mark,
+.select-all input:focus-visible + span {
+  outline: 3px solid #9bc6c1;
+  outline-offset: 3px;
+}
+
+.select-all .checkbox-mark {
+  margin-top: 0;
+}
+
+.checkbox-mark-checked {
+  border-color: #48706d;
+  background: #48706d;
+}
+
+.checkbox-mark-checked::after {
+  width: 8px;
+  height: 5px;
+  border-bottom: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+  content: '';
+  transform: rotate(-45deg) translate(1px, -1px);
+}
+
+.checkbox-mark-partial {
+  border-color: #48706d;
+  background: #edf6f4;
+}
+
+.checkbox-mark-partial::after {
+  width: 9px;
+  height: 2px;
+  border-radius: 2px;
+  background: #48706d;
+  content: '';
 }
 
 .page-details {
