@@ -19,6 +19,29 @@ body {
   padding: 24px 20px 32px;
 }
 
+@media (max-width: 360px) {
+  .panel {
+    padding: 20px 14px 28px;
+  }
+
+  h1 {
+    font-size: 1.32rem;
+  }
+
+  .select-all {
+    gap: 8px;
+    padding: 9px 10px;
+  }
+
+  .select-all small {
+    font-size: 0.68rem;
+  }
+
+  .page-card {
+    padding: 10px;
+  }
+}
+
 .header {
   border-bottom: 1px solid #d7e0e2;
   padding-bottom: 22px;
@@ -431,10 +454,22 @@ button:disabled {
   border-color: #9bc6c1;
 }
 
+.page-card:focus-within,
+.select-all:focus-within {
+  border-color: #48706d;
+  box-shadow: 0 0 0 3px rgba(155, 198, 193, 0.55);
+}
+
 .page-card-selected {
   border-color: #48706d;
   background: #edf6f4;
   box-shadow: 0 0 0 1px #48706d;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-fill {
+    transition: none;
+  }
 }
 
 .page-card input,

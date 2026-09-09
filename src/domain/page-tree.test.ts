@@ -62,4 +62,19 @@ describe('buildPageTree', () => {
       },
     ]);
   });
+
+  it('keeps a large page list grouped without losing entries', () => {
+    const pages = Array.from({ length: 500 }, (_, index) => ({
+      id: `page-${index}`,
+      title: `Page ${index}`,
+      titleSource: 'path-fallback' as const,
+      url: `https://example.com/section/page-${index}`,
+      path: `section/page-${index}`,
+    }));
+
+    const tree = buildPageTree(pages);
+
+    expect(tree).toHaveLength(1);
+    expect(tree[0].children).toHaveLength(500);
+  });
 });

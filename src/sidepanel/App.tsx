@@ -184,6 +184,11 @@ export function App() {
     }
   }, [importCompleted]);
 
+  function closeSuccessWithEscape(event: React.KeyboardEvent<HTMLElement>) {
+    if (event.key === 'Escape') {
+      setIsSuccessOpen(false);
+    }
+  }
   return (
     <main className="panel">
       <header className="header">
@@ -288,10 +293,13 @@ export function App() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="success-modal-title"
+            aria-describedby="success-modal-description"
+            onKeyDown={closeSuccessWithEscape}
+            tabIndex={-1}
           >
             <p className="success-mark" aria-hidden="true">✓</p>
             <h2 id="success-modal-title">Importação concluída</h2>
-            <p>O conteúdo foi adicionado ao seu Study Kit.</p>
+            <p id="success-modal-description">O conteúdo foi adicionado ao seu Study Kit.</p>
             <button type="button" onClick={() => setIsSuccessOpen(false)} autoFocus>
               OK
             </button>
