@@ -3,12 +3,10 @@ import type {
   GitBookResponse,
   ImportJobResponse,
   ImportProgressMessage,
-  MarkdownDownloadResponse,
   StudyKitResponse,
 } from '../shared/messages';
 import type { ImportJobState, ImportPageState } from '../domain/import-job';
 import { buildPageTree, type PageTreeNode } from '../domain/page-tree';
-import { createMarkdownFile, type MarkdownFile } from '../domain/markdown-file';
 import type { GitBookPage } from '../domain/sitemap-types';
 import { getSelectionState } from '../domain/selection-state';
 import './app.css';
@@ -23,10 +21,7 @@ export function App() {
   const [gitBookUrl, setGitBookUrl] = useState('');
   const [pages, setPages] = useState<GitBookPage[]>([]);
   const [selectedPageIds, setSelectedPageIds] = useState<Set<string>>(new Set());
-  const [downloadedFiles, setDownloadedFiles] = useState<Map<string, MarkdownFile>>(new Map());
-  const [downloadErrors, setDownloadErrors] = useState<Map<string, string>>(new Map());
   const [isDiscovering, setIsDiscovering] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
   const [importJob, setImportJob] = useState<ImportJobState | null>(null);
   const [discoveryError, setDiscoveryError] = useState<string | null>(null);
   const pageTree = useMemo(() => buildPageTree(pages), [pages]);
@@ -59,8 +54,6 @@ export function App() {
     setDiscoveryError(null);
     setPages([]);
     setSelectedPageIds(new Set());
-    setDownloadedFiles(new Map());
-    setDownloadErrors(new Map());
     setImportJob(null);
 
     chrome.runtime.sendMessage(
@@ -120,60 +113,7 @@ export function App() {
   const importedCount = importJob?.pages.filter(({ status }) => status === 'imported').length ?? 0;
   const importCompleted =
     importJob?.status === 'completed' && importedCount === importJob.pages.length && importJob.pages.length > 0;
-  const downloadCompleted = !isDownloading && downloadedFiles.size > 0;
-  const downloadPartial = downloadCompleted && downloadErrors.size > 0;
 
-  function downloadSelectedPages() {
-    const selectedPages = pages.filter((page) => selectedPageIds.has(page.id));
-
-    if (selectedPages.length === 0) {
-      return;
-    }
-
-    setIsDownloading(true);
-    setDownloadedFiles(new Map());
-    setDownloadErrors(new Map());
-
-    chrome.runtime.sendMessage(
-      { type: 'DOWNLOAD_MARKDOWN_PAGES', pages: selectedPages },
-      (response: MarkdownDownloadResponse) => {
-        setIsDownloading(false);
-
-        if (chrome.runtime.lastError) {
-          setDownloadErrors(
-            new Map(selectedPages.map((page) => [page.id, 'Não foi possível baixar o Markdown.'])),
-          );
-          return;
-        }
-
-        if (!response?.ok) {
-          setDownloadErrors(new Map(selectedPages.map((page) => [page.id, response?.reason ?? 'Falha no download.'])));
-          return;
-        }
-
-        const pagesById = new Map(pages.map((page) => [page.id, page]));
-        const files = new Map<string, MarkdownFile>();
-        const errors = new Map<string, string>();
-
-        for (const result of response.results) {
-          const page = pagesById.get(result.pageId);
-
-          if (!page) {
-            continue;
-          }
-
-          if (result.ok) {
-            files.set(page.id, createMarkdownFile(page, result.content));
-          } else {
-            errors.set(page.id, getDownloadErrorMessage(result.reason));
-          }
-        }
-
-        setDownloadedFiles(files);
-        setDownloadErrors(errors);
-      },
-    );
-  }
 
   function startImport() {
     if (viewState.status !== 'ready' || selectedPageIds.size === 0) {
@@ -306,31 +246,19 @@ export function App() {
               disabled={
                 selectedCount === 0 ||
                 importJob?.status === 'running' ||
-                importCompleted ||
                 viewState.status !== 'ready'
               }
               onClick={startImport}
             >
               {importJob?.status === 'running'
                 ? `Importando ${importedCount} de ${importJob.pages.length}...`
-                : importCompleted
-                  ? 'Importação concluída'
                   : getImportButtonLabel(selectedCount)}
             </button>
-            <button
-              type="button"
-              className="download-button"
-              disabled={selectedCount === 0 || isDownloading}
-              onClick={downloadSelectedPages}
-            >
-              {isDownloading
-                ? 'Preparando Markdown...'
-                : downloadPartial
-                  ? 'Download parcial'
-                  : downloadCompleted
-                    ? 'Download concluído'
-                    : 'Baixar Markdown'}
-            </button>
+            {importCompleted && (
+              <p className="import-success" role="status">
+                Importação concluída com sucesso.
+              </p>
+            )}
             {importJob?.status === 'running' && (
               <button type="button" className="cancel-button" onClick={cancelImport}>
                 Cancelar importação
@@ -342,18 +270,6 @@ export function App() {
               selectedPageIds={selectedPageIds}
               onTogglePage={togglePage}
             />
-            {(downloadedFiles.size > 0 || downloadErrors.size > 0) && (
-              <div className="download-results" aria-live="polite">
-                <p className="label">Resultado do download</p>
-                {pages
-                  .filter((page) => downloadedFiles.has(page.id) || downloadErrors.has(page.id))
-                  .map((page) => (
-                    <p key={page.id} className={downloadErrors.has(page.id) ? 'download-error' : 'download-success'}>
-                      {downloadErrors.get(page.id) ?? `${downloadedFiles.get(page.id)?.fileName} pronto em memória`}
-                    </p>
-                  ))}
-              </div>
-            )}
           </div>
         )}
 
@@ -520,18 +436,6 @@ function getDiscoveryErrorMessage(reason?: string): string {
   }
 
   return 'Não foi possível carregar as páginas do GitBook.';
-}
-
-function getDownloadErrorMessage(reason: string): string {
-  if (reason.startsWith('MARKDOWN_REQUEST_FAILED:')) {
-    return 'A página não pôde ser baixada.';
-  }
-
-  if (reason === 'INVALID_MARKDOWN_CONTENT') {
-    return 'A resposta da página não contém Markdown válido.';
-  }
-
-  return 'Falha ao baixar esta página.';
 }
 
 function getImportErrorMessage(reason: string): string {

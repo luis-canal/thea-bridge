@@ -208,20 +208,6 @@ button:disabled {
   font-weight: 400;
 }
 
-.download-button {
-  margin-top: 10px;
-  border-color: #b8c8ca;
-  color: #52616b;
-  background: #ffffff;
-  font-size: 0.82rem;
-}
-
-.download-button:disabled {
-  border-color: #b8c8ca;
-  color: #6a7a81;
-  background: #e8eeee;
-}
-
 .import-button {
   margin-top: 14px;
   padding: 13px 12px;
@@ -237,6 +223,13 @@ button:disabled {
   color: #6a7a81;
   background: #e8eeee;
   box-shadow: none;
+}
+
+.import-success {
+  margin: 10px 0 0;
+  color: #48706d;
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
 .cancel-button {
@@ -314,28 +307,6 @@ button:disabled {
   color: #52616b;
   background: #ffffff;
   font-size: 0.72rem;
-}
-
-.download-results {
-  display: grid;
-  gap: 6px;
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 1px solid #d7e0e2;
-}
-
-.download-results p:not(.label) {
-  margin: 0;
-  font-size: 0.78rem;
-  line-height: 1.35;
-}
-
-.download-success {
-  color: #48706d;
-}
-
-.download-error {
-  color: #a63b32;
 }
 
 .page-tree,
