@@ -7,6 +7,7 @@ describe('getMarkdownFileName', () => {
       getMarkdownFileName({
         id: 'page',
         title: 'Introdução',
+        titleSource: 'path-fallback',
         url: 'https://example.com/fundamentos/01-introducao-engenharia',
         path: 'fundamentos/01-introducao-engenharia',
       }),
@@ -18,6 +19,7 @@ describe('getMarkdownFileName', () => {
       getMarkdownFileName({
         id: 'page',
         title: 'Página',
+        titleSource: 'path-fallback',
         url: 'https://example.com/page',
         path: 'Página: primeiro teste?',
       }),
@@ -28,7 +30,7 @@ describe('getMarkdownFileName', () => {
 describe('createMarkdownFile', () => {
   it('keeps the markdown content in memory with its metadata', () => {
     const file = createMarkdownFile(
-      { id: 'page', title: 'Intro', url: 'https://example.com/intro', path: 'intro' },
+      { id: 'page', title: 'Intro', titleSource: 'path-fallback', url: 'https://example.com/intro', path: 'intro' },
       '# Intro',
     );
 

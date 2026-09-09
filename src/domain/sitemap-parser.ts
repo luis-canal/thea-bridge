@@ -30,6 +30,7 @@ export function parseSitemapPages(xml: string, source: GitBookSource): GitBookPa
     pages.set(pageUrl, {
       id: pageUrl,
       title: getPageTitle(pageUrl, source),
+      titleSource: 'path-fallback',
       url: pageUrl,
       path: getPagePath(pageUrl, source),
     });
@@ -59,5 +60,13 @@ function getPagePath(pageUrl: string, source: GitBookSource): string {
 function getPageTitle(pageUrl: string, source: GitBookSource): string {
   const path = getPagePath(pageUrl, source);
   const lastSegment = path.split('/').filter(Boolean).at(-1) ?? path;
-  return decodeURIComponent(lastSegment).replace(/[-_]+/g, ' ');
+  return decodePathSegment(lastSegment).replace(/[-_]+/g, ' ');
+}
+
+function decodePathSegment(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
 }

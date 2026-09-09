@@ -3,7 +3,7 @@ import { createMarkdownFile } from '../../domain/markdown-file';
 import { TheaClient } from './thea-client';
 
 const file = createMarkdownFile(
-  { id: 'page', title: 'Intro', url: 'https://example.com/intro', path: 'intro' },
+  { id: 'page', title: 'Intro', titleSource: 'path-fallback', url: 'https://example.com/intro', path: 'intro' },
   '# Intro',
 );
 

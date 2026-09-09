@@ -3,8 +3,8 @@ import { ImportJob, type ImportJobState } from './import-job';
 import type { GitBookPage } from './sitemap-types';
 
 const pages: GitBookPage[] = [
-  { id: 'one', title: 'One', url: 'https://example.com/one', path: 'one' },
-  { id: 'two', title: 'Two', url: 'https://example.com/two', path: 'two' },
+  { id: 'one', title: 'One', titleSource: 'path-fallback', url: 'https://example.com/one', path: 'one' },
+  { id: 'two', title: 'Two', titleSource: 'path-fallback', url: 'https://example.com/two', path: 'two' },
 ];
 
 function createJob(

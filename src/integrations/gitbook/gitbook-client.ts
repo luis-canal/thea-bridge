@@ -1,5 +1,6 @@
 import { normalizeGitBookUrl, type GitBookSource } from '../../domain/gitbook-url';
 import { buildMarkdownUrl } from '../../domain/markdown-url';
+import { extractMarkdownTitle } from '../../domain/markdown-title';
 import { parseSitemapPages } from '../../domain/sitemap-parser';
 import type { GitBookPage } from '../../domain/sitemap-types';
 
@@ -18,11 +19,28 @@ export class GitBookClient {
     }
 
     const xml = await response.text();
+    const pages = parseSitemapPages(xml, source);
+    const titledPages = await Promise.all(pages.map((page) => this.enrichPageTitle(page)));
 
     return {
       source,
-      pages: parseSitemapPages(xml, source),
+      pages: titledPages,
     };
+  }
+
+  private async enrichPageTitle(page: GitBookPage): Promise<GitBookPage> {
+    try {
+      const markdown = await this.fetchMarkdown(page);
+      const title = extractMarkdownTitle(markdown);
+
+      if (title) {
+        return { ...page, title, titleSource: 'gitbook' };
+      }
+    } catch {
+      // The pathname fallback keeps one unavailable page from breaking discovery.
+    }
+
+    return page;
   }
 
   async fetchMarkdown(page: GitBookPage): Promise<string> {

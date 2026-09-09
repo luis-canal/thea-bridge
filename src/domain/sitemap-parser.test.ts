@@ -19,12 +19,14 @@ describe('parseSitemapPages', () => {
       {
         id: 'https://hiago.gitbook.io/space/a-page',
         title: 'a page',
+        titleSource: 'path-fallback',
         url: 'https://hiago.gitbook.io/space/a-page',
         path: 'a-page',
       },
       {
         id: 'https://hiago.gitbook.io/space/z-page',
         title: 'z page',
+        titleSource: 'path-fallback',
         url: 'https://hiago.gitbook.io/space/z-page',
         path: 'z-page',
       },

@@ -3,7 +3,7 @@ import { buildPageTree } from './page-tree';
 
 describe('buildPageTree', () => {
   it('keeps a root page in the tree', () => {
-    const page = { id: 'root', title: 'Home', url: 'https://example.com', path: '' };
+    const page = { id: 'root', title: 'Home', titleSource: 'path-fallback' as const, url: 'https://example.com', path: '' };
 
     expect(buildPageTree([page])).toEqual([
       { name: 'Home', path: 'root', page, children: [] },
@@ -12,9 +12,9 @@ describe('buildPageTree', () => {
 
   it('groups pages by pathname segments', () => {
     const tree = buildPageTree([
-      { id: 'a', title: 'A', url: 'https://example.com/a', path: 'fundamentos/intro' },
-      { id: 'b', title: 'B', url: 'https://example.com/b', path: 'fundamentos/guia' },
-      { id: 'c', title: 'C', url: 'https://example.com/c', path: 'avancado' },
+      { id: 'a', title: 'A', titleSource: 'path-fallback', url: 'https://example.com/a', path: 'fundamentos/intro' },
+      { id: 'b', title: 'B', titleSource: 'path-fallback', url: 'https://example.com/b', path: 'fundamentos/guia' },
+      { id: 'c', title: 'C', titleSource: 'path-fallback', url: 'https://example.com/c', path: 'avancado' },
     ]);
 
     expect(tree).toEqual([
@@ -28,6 +28,7 @@ describe('buildPageTree', () => {
             page: {
               id: 'a',
               title: 'A',
+              titleSource: 'path-fallback',
               url: 'https://example.com/a',
               path: 'fundamentos/intro',
             },
@@ -39,6 +40,7 @@ describe('buildPageTree', () => {
             page: {
               id: 'b',
               title: 'B',
+              titleSource: 'path-fallback',
               url: 'https://example.com/b',
               path: 'fundamentos/guia',
             },
@@ -52,6 +54,7 @@ describe('buildPageTree', () => {
         page: {
           id: 'c',
           title: 'C',
+          titleSource: 'path-fallback',
           url: 'https://example.com/c',
           path: 'avancado',
         },
