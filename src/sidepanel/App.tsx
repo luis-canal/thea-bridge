@@ -23,6 +23,7 @@ export function App() {
   const [selectedPageIds, setSelectedPageIds] = useState<Set<string>>(new Set());
   const [isDiscovering, setIsDiscovering] = useState(false);
   const [importJob, setImportJob] = useState<ImportJobState | null>(null);
+  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
   const [discoveryError, setDiscoveryError] = useState<string | null>(null);
   const pageTree = useMemo(() => buildPageTree(pages), [pages]);
 
@@ -55,6 +56,7 @@ export function App() {
     setPages([]);
     setSelectedPageIds(new Set());
     setImportJob(null);
+    setIsSuccessOpen(false);
 
     chrome.runtime.sendMessage(
       { type: 'DISCOVER_GITBOOK_PAGES', url: gitBookUrl },
@@ -176,6 +178,12 @@ export function App() {
     return () => chrome.runtime.onMessage.removeListener(handleImportProgress);
   }, [importJob?.jobId]);
 
+  useEffect(() => {
+    if (importCompleted) {
+      setIsSuccessOpen(true);
+    }
+  }, [importCompleted]);
+
   return (
     <main className="panel">
       <header className="header">
@@ -254,11 +262,6 @@ export function App() {
                 ? `Importando ${importedCount} de ${importJob.pages.length}...`
                   : getImportButtonLabel(selectedCount)}
             </button>
-            {importCompleted && (
-              <p className="import-success" role="status">
-                Importação concluída com sucesso.
-              </p>
-            )}
             {importJob?.status === 'running' && (
               <button type="button" className="cancel-button" onClick={cancelImport}>
                 Cancelar importação
@@ -277,6 +280,24 @@ export function App() {
           <p className="empty-state-message">Nenhuma página encontrada.</p>
         )}
       </section>
+
+      {isSuccessOpen && importCompleted && (
+        <div className="success-modal-backdrop" role="presentation">
+          <section
+            className="success-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="success-modal-title"
+          >
+            <p className="success-mark" aria-hidden="true">✓</p>
+            <h2 id="success-modal-title">Importação concluída</h2>
+            <p>O conteúdo foi adicionado ao seu Study Kit.</p>
+            <button type="button" onClick={() => setIsSuccessOpen(false)} autoFocus>
+              OK
+            </button>
+          </section>
+        </div>
+      )}
     </main>
   );
 }
