@@ -221,7 +221,7 @@ export function App() {
     <main className="panel">
       <header className="header">
         <p className="eyebrow">TheaBridge</p>
-        <h1>Importação de conteúdo</h1>
+        <h1>Importar do GitBook</h1>
       </header>
 
       <section className="context" aria-live="polite">
@@ -249,6 +249,18 @@ export function App() {
           </button>
         </form>
 
+        {!isDiscovering && !discoveryError && pages.length === 0 && !gitBookUrl && (
+          <div className="empty-state">
+            <p className="empty-state-title">Importar conteúdo do GitBook para seu Study Kit.</p>
+            <div className="tip">
+              <span className="tip-mark" aria-hidden="true">i</span>
+              <p>
+                Abra um GitBook e copie a URL da página inicial do conteúdo.
+              </p>
+            </div>
+          </div>
+        )}
+
         {discoveryError && (
           <p className="feedback error" role="alert">
             {discoveryError}
@@ -258,11 +270,11 @@ export function App() {
         {pages.length > 0 && (
           <div className="pages" aria-live="polite">
             <div className="pages-heading">
-              <div>
-                <p className="label">Páginas encontradas</p>
-                <p className="selection-count">{selectedPageIds.size} selecionada(s)</p>
-              </div>
-              <span>{pages.length}</span>
+              <p className="page-state">
+                <strong>{pages.length}</strong> páginas encontradas
+                <span aria-hidden="true"> · </span>
+                <strong>{selectedPageIds.size}</strong> selecionadas
+              </p>
             </div>
             <div className="selection-actions">
               <button type="button" onClick={selectAllPages}>
@@ -315,7 +327,7 @@ export function App() {
         )}
 
         {!isDiscovering && !discoveryError && pages.length === 0 && gitBookUrl && (
-          <p className="feedback">Nenhuma página foi encontrada no sitemap.</p>
+          <p className="empty-state-message">Nenhuma página encontrada.</p>
         )}
       </section>
     </main>
