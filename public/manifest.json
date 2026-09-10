@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "TheaBridge",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Importe conteúdos do GitBook para seus Study Kits do Thea.",
   "action": {
     "default_title": "Abrir TheaBridge",
